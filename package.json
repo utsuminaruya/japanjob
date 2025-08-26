@@ -26,3 +26,10 @@
     "node": ">=18"
   }
 }
+{
+  "scripts": {
+    "gen:100": "node scripts/generate-jobs.mjs 100",
+    "gen:300": "node scripts/generate-jobs.mjs 300",
+    "gen:1000": "node scripts/generate-jobs.mjs 1000"
+  }
+}
