@@ -221,67 +221,72 @@ export default function App() {
           <Briefcase className="h-5 w-5 text-teal-600" /> {t.jobs}
         </h2>
 
-        <div className="grid md:grid-cols-2 gap-5">
-          {shown.map((j) => (
-            <div key={j.id} className="rounded-2xl bg-white border border-slate-200 hover:bg-cyan-50 transition-colors">
-              <div className="p-5 border-b border-slate-200">
-                <div className="text-lg font-bold flex items-center justify-between text-slate-900">
-                  <span>{lang === 'ja' ? j.title_ja : j.title_vi}</span>
-                  <div className="flex items-center gap-2">
-                    {j.sample && (
-                      <span className="rounded-xl px-2 py-1 text-xs bg-amber-50 text-amber-700 border border-amber-200">{t.sample}</span>
-                    )}
-                    {j.visa_friendly && (
-                      <span className="rounded-xl px-2 py-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
-                        <CheckCircle2 className="h-4 w-4" /> {t.visaFriendly}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-1 text-sm text-slate-600 flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-teal-600" /> {j.company}
-                </div>
-                <div className="text-sm text-slate-600 flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-teal-600" /> {lang === 'ja' ? j.city_ja : j.city_vi}
-                </div>
-                <div className="text-xs text-slate-600 mt-1">
-                  <span className="mr-3">{t.area}: {j.areaPref}</span>
-                  <span>{t.region}: {j.region}</span>
-                </div>
-              </div>
-              <div className="p-5 space-y-3">
-                <p className="text-sm text-slate-700">{lang === 'ja' ? j.desc_ja : j.desc_vi}</p>
-                <div className="flex flex-wrap gap-2">
-                  {(j.tags||[]).map((tg, idx) => (
-                    <span key={idx} className="rounded-xl px-2 py-1 text-xs bg-cyan-50 text-cyan-700 border border-cyan-200">
-                      {tg}
-                    </span>
-                  ))}
-                </div>
-                <div className="text-sm text-slate-700">
-                  <span className="opacity-75 mr-2">{t.salary}:</span>
-                  <span>{lang === 'ja' ? j.salary_ja : j.salary_vi}</span>
-                </div>
-                <div className="pt-2 flex flex-wrap gap-2 text-sm">
-                  <a
-                    href={LINE_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-xl px-3 py-2 bg-teal-600 text-white hover:bg-teal-700"
-                  >
-                    <MessageSquare className="h-4 w-4" /> {j.sample ? t.lineCta : t.lineCtaApply}
-                  </a>
-                  <a href={`tel:${CONTACT_TEL}`} className="inline-flex items-center gap-1 rounded-xl px-3 py-2 bg-white border border-slate-200 hover:bg-cyan-50">
-                    <Phone className="h-4 w-4 text-teal-600" /> {CONTACT_TEL}
-                  </a>
-                  <a href={`mailto:${CONTACT_MAIL}`} className="inline-flex items-center gap-1 rounded-xl px-3 py-2 bg-white border border-slate-200 hover:bg-cyan-50">
-                    <Mail className="h-4 w-4 text-teal-600" /> {CONTACT_MAIL}
-                  </a>
-                </div>
-              </div>
-            </div>
+        // 表示用ヘルパーを App.jsx に追記
+const fmtJPY = (n) => `¥${Math.round(n).toLocaleString()}`
+const salText = (j, lang) => {
+  if (typeof j.salary_monthly_min === 'number' && typeof j.salary_monthly_max === 'number') {
+    const ja = `月給 ${Math.round(j.salary_monthly_min/1000)/10}万〜${Math.round(j.salary_monthly_max/1000)/10}万円`
+    const vi = `Lương ${fmtJPY(j.salary_monthly_min)}–${fmtJPY(j.salary_monthly_max)}/tháng`
+    return lang === 'ja' ? ja : vi
+  }
+  return lang === 'ja' ? (j.salary_ja || '') : (j.salary_vi || '')
+}
+const badgeJLPT = (j) => j.jlpt ? `JLPT ${j.jlpt}` : (j.tags||[]).find(t=>t.startsWith('JLPT')) || 'JLPT 不問'
+const badgeShift = (j) => j.shift || (j.tags||[]).find(t=>['日勤のみ','夜勤あり','2交替','3交替','シフト制'].includes(t)) || 'シフト制'
+const badgeHousing = (j) => j.housing || (j.tags||[]).find(t=>t.includes('寮')) || '寮なし'
+
+// ↓ これが求人カード全体
+<div className="grid md:grid-cols-2 gap-5">
+  {shown.map((j) => (
+    <div key={j.id} className="rounded-2xl bg-white border border-slate-200 hover:bg-cyan-50 transition-colors">
+      <div className="p-5 border-b border-slate-200">
+        {/* タイトル行 */}
+        <div className="text-lg font-bold flex items-center justify-between text-slate-900">
+          <span>{lang === 'ja' ? j.title_ja : j.title_vi}</span>
+          <div className="flex items-center gap-2">
+            {j.visa_friendly && (
+              <span className="rounded-xl px-2 py-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
+                ビザ支援あり
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* 折返し前：月給・寮・シフト・JLPT */}
+        <div className="mt-2 flex flex-wrap gap-2">
+          <span className="rounded-lg px-2 py-1 text-xs bg-sky-50 text-sky-700 border border-sky-200">
+            {salText(j, lang)}
+          </span>
+          <span className="rounded-lg px-2 py-1 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200">
+            {badgeHousing(j)}
+          </span>
+          <span className="rounded-lg px-2 py-1 text-xs bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200">
+            {badgeShift(j)}
+          </span>
+          <span className="rounded-lg px-2 py-1 text-xs bg-teal-50 text-teal-700 border border-teal-200">
+            {badgeJLPT(j)}
+          </span>
+        </div>
+
+        {/* 会社・勤務地 */}
+        <div className="mt-2 text-sm text-slate-600">{j.company}</div>
+        <div className="text-sm text-slate-600">{lang === 'ja' ? j.city_ja : j.city_vi}</div>
+      </div>
+
+      {/* 本文 */}
+      <div className="p-5 space-y-3">
+        <p className="text-sm text-slate-700">{lang === 'ja' ? j.desc_ja : j.desc_vi}</p>
+        <div className="flex flex-wrap gap-2">
+          {(j.tags||[]).map((tg, idx) => (
+            <span key={idx} className="rounded-xl px-2 py-1 text-xs bg-cyan-50 text-cyan-700 border border-cyan-200">
+              {tg}
+            </span>
           ))}
         </div>
+      </div>
+    </div>
+  ))}
+</div>
 
         {/* ページネーション */}
         <div className="mt-6 flex items-center justify-between">
